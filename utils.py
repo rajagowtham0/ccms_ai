@@ -91,27 +91,62 @@ def calculate_confidence(similar_cases: List[Dict]) -> float:
     scores = [case["similarity_score"] for case in similar_cases]
 
     return round(sum(scores) / len(scores), 4)
-# output formatting
+from typing import List, Dict
+from collections import Counter
+from typing import List, Dict
+
+# updated output formatting
 def format_output(symptoms: str,
                   clinical_note: str,
                   similar_cases: List[Dict],
-    formatted_cases = []
+                  stored_cases: List[Dict],
+                  confidence_score: float) -> Dict:
+    # Map case_id to full case
+    case_map = {case["case_id"]: case for case in stored_cases}
+
+    # Extract treatment & outcome patterns
+    treatments = []
+    outcomes = []
 
     for case in similar_cases:
-        formatted_cases.append({
+        case_data = case_map.get(case["case_id"])
+        if case_data:
+            treatments.append(case_data.get("treatment"))
+            outcomes.append(case_data.get("outcome"))
+
+    # Most common treatment pattern
+    treatment_pattern = [
+        t for t, _ in Counter(treatments).most_common(3)
+    ]
+
+    # Most common outcome
+    outcome_pattern = (
+        Counter(outcomes).most_common(1)[0][0]
+        if outcomes else "Not available"
+    )
+
+    # Format similar case list
+    formatted_similar_cases = [
+        {
             "case_id": case["case_id"],
-            "similarity_score": case["similarity_score"],
-            "treatment": case.get("treatment", "Not available"),
-            "recovery_trend": format_recovery_trend(
-                case.get("recovery_days")
-            )
-        })
+            "similarity_score": round(case["similarity_score"], 4)
+        }
+        for case in similar_cases
+    ]
+
+    # Confidence explanation
+    confidence_reason = (
+        f"Based on {len(similar_cases)} highly similar historical cases, "
+        f"the confidence score obtained is {confidence_score}."
+    )
 
     return {
-        "query": {
+        "query_summary": {
             "symptoms": symptoms,
             "clinical_note": clinical_note
         },
-        "top_similar_patients": formatted_cases,
-        "confidence_score": confidence_score
+        "similar_cases": formatted_similar_cases,
+        "common_treatment_pattern": treatment_pattern,
+        "outcome_pattern": outcome_pattern,
+        "confidence_reason": confidence_reason
     }

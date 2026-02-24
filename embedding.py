@@ -29,3 +29,14 @@ def generate_embeddings(texts: List[str]) -> np.ndarray:
         convert_to_numpy=True,
         show_progress_bar=True
     )
+# generate embedding for the single text 
+def generate_single_embedding(text: str) -> np.ndarray:
+    if not isinstance(text, str):
+        raise TypeError("Input must be a string.")
+
+    model = load_embedding_model()
+
+    return model.encode(
+        text,
+        convert_to_numpy=True
+    )
