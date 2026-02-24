@@ -3,28 +3,28 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 
 
-class EmbeddingModel:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+# Private module-level variable
+_model = None
 
-    def generate_embeddings(self, texts: List[str]) -> np.ndarray:
-        if not isinstance(texts, list):
-            raise TypeError("Input must be a list of strings.")
+# loading the embedding module
+def load_embedding_model(model_name: str = "all-MiniLM-L6-v2"):
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(model_name)
+    return _model
 
-        if len(texts) == 0:
-            raise ValueError("Text list is empty.")
+# generate embeddings for texts
+def generate_embeddings(texts: List[str]) -> np.ndarray:
+    if not isinstance(texts, list):
+        raise TypeError("Input must be a list of strings.")
 
-        return self.model.encode(
-            texts,
-            convert_to_numpy=True,
-            show_progress_bar=True
-        )
+    if len(texts) == 0:
+        raise ValueError("Text list is empty.")
 
-    def generate_single_embedding(self, text: str) -> np.ndarray:
-        if not isinstance(text, str):
-            raise TypeError("Input must be a string.")
+    model = load_embedding_model()
 
-        return self.model.encode(
-            text,
-            convert_to_numpy=True
-        )
+    return model.encode(
+        texts,
+        convert_to_numpy=True,
+        show_progress_bar=True
+    )
